@@ -159,3 +159,20 @@ You can verify the server is running by hitting the health check endpoint:
 ```text
 GET /api/v1/health
 ```
+
+## Local Database Development
+
+* Prisma ORM 7 is used as the database ORM.
+* Local development uses Prisma Postgres via the `prisma dev` command.
+* Migrations are tracked in the `prisma/migrations` directory. The initial migration creates the Agent, Property, and Viewing tables.
+* The `.env` file contains the local connection information and is deliberately never committed.
+
+**Check Migration Status:**
+```bash
+npx prisma migrate status
+```
+
+**Run Database Smoke Test:**
+```bash
+npm run db:smoke
+```
