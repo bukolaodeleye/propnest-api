@@ -341,7 +341,40 @@ Collection endpoints are paginated using `limit` and `offset` query parameters.
 }
 ```
 
-**Error Response:**
+### Rate Limiting
+The API uses IP-based rate limiting to prevent abuse.
+* **Limit:** 100 requests per IP
+* **Window:** 60 seconds
+* **Exceeded:** Returns HTTP 429
+* **Headers:** `Retry-After` header is included on blocked requests (along with standard Draft-8 rate limit headers)
+* **Configuration:** Limit numbers are managed centrally in the API config module (`src/config/api.ts`).
+
+*Note: The current development/single-instance limiter uses an in-memory store. For a horizontally scaled production system, a shared rate-limit store (e.g. Redis) would be preferable.*
+
+**Example 429 Response:**
+```json
+{
+  "error": {
+    "code": "RATE_LIMIT_EXCEEDED",
+    "message": "Too many requests. Please try again later."
+  }
+}
+```
+
+### Error Responses & Input Behavior
+The API is hardened against unexpected client inputs and gracefully rejects them with standard JSON error envelopes instead of failing with internal server errors (500).
+
+Examples of API defensive behavior:
+* **Negative Offset:** `?offset=-1` → `400 Bad Request`
+* **Invalid Sort Field:** `?sort=banana` → `400 Bad Request`
+* **Malformed UUID:** `/api/v1/properties/not-a-uuid` → `400 Bad Request`
+* **Nonexistent Resource:** Valid UUID but missing from database → `404 Not Found`
+* **Body Validation:** Missing required field / invalid formats → `422 Unprocessable Entity`
+* **Too Many Requests:** Exceeding 100 req / minute → `429 Too Many Requests`
+* **Unknown Routes:** `/api/v1/bananas` → `404 Not Found` (Returns standard JSON envelope, not Express HTML)
+* **Malformed JSON:** Broken request body → `400 Bad Request`
+
+**Error Response Envelope:**
 ```json
 {
   "error": {

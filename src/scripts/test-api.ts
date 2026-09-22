@@ -171,9 +171,79 @@ async function main() {
   });
   console.log(`DELETE malformed UUID -> ${res.status}, code: ${res.json.error?.code}`);
 
-  // 19. Final Viewing database count
+  console.log('\n--- Part J/K: Explicit Hardening & No-500 assertions ---');
+  let failures = 0;
+  async function assertNot500(name: string, p: string, m: string = 'GET', b: any = null) {
+    const opts: RequestInit = { method: m };
+    if (b) {
+      opts.headers = { 'Content-Type': 'application/json' };
+      opts.body = JSON.stringify(b);
+    }
+    const rr = await fetchJson(p, opts);
+    console.log(`${name} -> ${rr.status}`);
+    if (rr.status === 500) {
+      console.error(`FAILURE: ${name} returned 500!`);
+      failures++;
+    }
+    return rr;
+  }
+
+  // 1. Excessive limit
+  const h1 = await assertNot500('1. Excessive limit', '/api/v1/properties?limit=5000');
+  console.log(`  -> limit: ${h1.json.meta?.limit}, records: ${h1.json.data?.length}`);
+
+  // 2. Negative offset
+  await assertNot500('2. Negative offset', '/api/v1/properties?offset=-1');
+
+  // 3. Invalid offset type
+  await assertNot500('3. Invalid offset type', '/api/v1/properties?offset=banana');
+
+  // 4. Unknown sort field
+  await assertNot500('4. Unknown sort field', '/api/v1/properties?sort=banana');
+
+  // 5. Invalid sort order
+  await assertNot500('5. Invalid sort order', '/api/v1/properties?sort=price&order=sideways');
+
+  // 6. Malformed identifier
+  await assertNot500('6. Malformed identifier', '/api/v1/properties/not-a-uuid');
+
+  // 7. Valid but nonexistent identifier
+  await assertNot500('7. Valid nonexistent id', '/api/v1/properties/00000000-0000-0000-0000-000000000000');
+
+  // 8. Missing required POST field
+  const missingEmailBody = { ...postData };
+  // @ts-ignore
+  delete missingEmailBody.customerEmail;
+  await assertNot500('8. Missing POST field', '/api/v1/viewings', 'POST', missingEmailBody);
+
+  // 9. Invalid enum filter
+  await assertNot500('9. Invalid enum filter', '/api/v1/properties?propertyType=castle');
+
+  // 10. Invalid price range
+  await assertNot500('10. Invalid price range', '/api/v1/properties?minPrice=100000000&maxPrice=10000000');
+
+  // 11. Invalid Viewing status body
+  await assertNot500('11. Invalid status body', '/api/v1/viewings', 'POST', { ...postData, status: 'waitingForever' });
+
+  // 12. Invalid referenced Property
+  await assertNot500('12. Invalid referenced Property', '/api/v1/viewings', 'POST', { ...postData, propertyId: '00000000-0000-0000-0000-000000000000' });
+
+  // 13. Malformed JSON
+  const rr = await fetchJson('/api/v1/viewings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"customerName":' });
+  console.log(`13. Malformed JSON -> ${rr.status}`);
+  if (rr.status === 500) failures++;
+
+  // 14. Unknown API route
+  await assertNot500('14. Unknown API route', '/api/v1/bananas');
+
+  if (failures > 0) {
+    console.error(`\nFound ${failures} instances of HTTP 500 during hardening!`);
+    process.exit(1);
+  }
+
+  // Final Viewing database count
   const count = await prisma.viewing.count();
-  console.log(`Final Viewing database count -> ${count}`);
+  console.log(`\nFinal Viewing database count -> ${count}`);
 }
 
 main()
