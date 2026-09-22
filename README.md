@@ -194,3 +194,60 @@ The seed script is committed at `prisma/seed.ts`.
 ```bash
 npm run db:seed
 ```
+
+## API Endpoints (Read-Only)
+
+All resource endpoints are versioned under `/api/v1`. Currently, only read operations are implemented (filtering and sorting will be added in later stages).
+
+### Agents
+* `GET /api/v1/agents`
+* `GET /api/v1/agents/:id`
+* `GET /api/v1/agents/:id/properties`
+
+### Properties
+* `GET /api/v1/properties`
+* `GET /api/v1/properties/:id`
+
+### Viewings
+* `GET /api/v1/viewings`
+* `GET /api/v1/viewings/:id`
+
+### Pagination
+Collection endpoints are paginated using `limit` and `offset` query parameters.
+* **`limit`**: Defaults to 20. Maximum is 100. Values exceeding 100 are automatically clamped to 100. Invalid or negative values return HTTP 400.
+* **`offset`**: Defaults to 0. Must be a non-negative integer. Negative values return HTTP 400.
+
+### Envelopes & Serialization
+
+**Collection Response:**
+```json
+{
+  "data": [],
+  "meta": {
+    "total": 0,
+    "limit": 20,
+    "offset": 0,
+    "hasMore": false
+  }
+}
+```
+
+**Single Resource Response:**
+```json
+{
+  "data": { ... }
+}
+```
+
+**Error Response:**
+```json
+{
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Human readable message"
+  }
+}
+```
+
+*Note: The `price` of a Property is a precise monetary value and is serialized in JSON as a raw `string` (e.g., `"85000000"`) to avoid floating point precision loss. Currency formatting should be handled by the consumer.*
+
