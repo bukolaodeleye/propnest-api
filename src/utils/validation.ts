@@ -55,3 +55,23 @@ export const viewingFilterSchema = paginationSchema.extend({
   message: "from date must not be later than to date",
   path: ["from"]
 });
+
+export const createViewingSchema = z.object({
+  propertyId: z.string().uuid(),
+  customerName: z.string().trim().min(1),
+  customerEmail: z.string().email(),
+  customerPhone: z.string().trim().min(1),
+  scheduledAt: z.string().datetime(),
+  status: z.enum(['pending', 'confirmed', 'completed', 'cancelled']).optional().default('pending')
+}).strict();
+
+export const updateViewingSchema = z.object({
+  propertyId: z.string().uuid().optional(),
+  customerName: z.string().trim().min(1).optional(),
+  customerEmail: z.string().email().optional(),
+  customerPhone: z.string().trim().min(1).optional(),
+  scheduledAt: z.string().datetime().optional(),
+  status: z.enum(['pending', 'confirmed', 'completed', 'cancelled']).optional()
+}).strict().refine(data => Object.keys(data).length > 0, {
+  message: "At least one field must be provided"
+});

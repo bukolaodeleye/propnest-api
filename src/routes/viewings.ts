@@ -1,11 +1,135 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '../lib/prisma.js';
-import { viewingFilterSchema, uuidSchema } from '../utils/validation.js';
+import { viewingFilterSchema, uuidSchema, createViewingSchema, updateViewingSchema } from '../utils/validation.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 import { calculatePaginationMeta } from '../utils/pagination.js';
 import { Prisma } from '../generated/prisma/index.js';
 
 const router = Router();
+
+router.post('/', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const parseResult = createViewingSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      const firstIssue = parseResult.error.issues[0];
+      const field = firstIssue.path.join('.');
+      res.status(422).json(errorResponse('VALIDATION_ERROR', `${field || 'Body'} ${firstIssue.message}`));
+      return;
+    }
+
+    const data = parseResult.data;
+
+    const property = await prisma.property.findUnique({
+      where: { id: data.propertyId },
+      select: { id: true }
+    });
+
+    if (!property) {
+      res.status(422).json(errorResponse('INVALID_REFERENCE', 'propertyId does not reference an existing property'));
+      return;
+    }
+
+    const viewing = await prisma.viewing.create({
+      data: {
+        propertyId: data.propertyId,
+        customerName: data.customerName,
+        customerEmail: data.customerEmail,
+        customerPhone: data.customerPhone,
+        scheduledAt: new Date(data.scheduledAt),
+        status: data.status,
+      }
+    });
+
+    res.status(201).json(successResponse(viewing));
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const idResult = uuidSchema.safeParse(req.params.id);
+    if (!idResult.success) {
+      res.status(400).json(errorResponse('INVALID_ID', 'Invalid viewing ID'));
+      return;
+    }
+    const viewingId = idResult.data;
+
+    const viewingExists = await prisma.viewing.findUnique({
+      where: { id: viewingId },
+      select: { id: true }
+    });
+
+    if (!viewingExists) {
+      res.status(404).json(errorResponse('NOT_FOUND', 'Viewing not found'));
+      return;
+    }
+
+    const parseResult = updateViewingSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      const firstIssue = parseResult.error.issues[0];
+      const field = firstIssue.path.join('.');
+      res.status(422).json(errorResponse('VALIDATION_ERROR', `${field ? field + ' ' : ''}${firstIssue.message}`));
+      return;
+    }
+
+    const data = parseResult.data;
+
+    if (data.propertyId) {
+      const property = await prisma.property.findUnique({
+        where: { id: data.propertyId },
+        select: { id: true }
+      });
+      if (!property) {
+        res.status(422).json(errorResponse('INVALID_REFERENCE', 'propertyId does not reference an existing property'));
+        return;
+      }
+    }
+
+    const updateData: any = { ...data };
+    if (updateData.scheduledAt) {
+      updateData.scheduledAt = new Date(updateData.scheduledAt);
+    }
+
+    const viewing = await prisma.viewing.update({
+      where: { id: viewingId },
+      data: updateData
+    });
+
+    res.json(successResponse(viewing));
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const idResult = uuidSchema.safeParse(req.params.id);
+    if (!idResult.success) {
+      res.status(400).json(errorResponse('INVALID_ID', 'Invalid viewing ID'));
+      return;
+    }
+    const viewingId = idResult.data;
+
+    const viewingExists = await prisma.viewing.findUnique({
+      where: { id: viewingId },
+      select: { id: true }
+    });
+
+    if (!viewingExists) {
+      res.status(404).json(errorResponse('NOT_FOUND', 'Viewing not found'));
+      return;
+    }
+
+    await prisma.viewing.delete({
+      where: { id: viewingId }
+    });
+
+    res.json(successResponse({ id: viewingId, deleted: true }));
+  } catch (error) {
+    next(error);
+  }
+});
 
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {

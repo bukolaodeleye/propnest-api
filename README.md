@@ -132,6 +132,7 @@ Offset pagination is being chosen initially because it is simple for API consume
 * **Versioning:** The API will use `/api/v1` from the beginning to ensure smooth future versioning without breaking existing clients.
 * **Consistent Envelopes:** Responses use consistent envelopes to provide a predictable structure for data, metadata, and errors across all endpoints.
 * **Pagination:** Offset pagination is the initial strategy because of its simplicity and ease of implementation for the bootcamp dataset.
+* **Write Operations:** Agents and Properties act as the public marketplace catalog for this assignment. Viewing is the transactional resource clients need to create and manage. Therefore, the current public API exposes read operations for Agents/Properties, and read + create/update/delete for Viewings. This deliberately avoids building an admin/authentication system outside the assignment scope. This does not imply that a real production marketplace should allow unrestricted public administrative writes.
 
 ## Scope
 
@@ -219,6 +220,92 @@ All resource endpoints are versioned under `/api/v1`. The collection endpoints s
   * Filters: `status` (enum), `propertyId` (UUID), `from` (date/datetime), `to` (date/datetime)
   * Sort: `scheduledAt` (default), `createdAt`, `status`
 * `GET /api/v1/viewings/:id`
+* `POST /api/v1/viewings`
+  * **Description**: Create a new viewing request.
+  * **Body**: `application/json`
+  * **Fields**:
+    * `propertyId` (UUID, Required) - ID of the property to view
+    * `customerName` (String, Required) - Full name of the customer
+    * `customerEmail` (String, Required) - Valid email address
+    * `customerPhone` (String, Required) - Phone number
+    * `scheduledAt` (Datetime, Required) - ISO 8601 date and time for the viewing
+    * `status` (Enum, Optional) - One of `pending`, `confirmed`, `completed`, `cancelled`. Defaults to `pending`.
+  * **Example Request**:
+    ```bash
+    curl -X POST http://localhost:3000/api/v1/viewings \
+      -H "Content-Type: application/json" \
+      -d '{
+        "propertyId": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+        "customerName": "Ada Okafor",
+        "customerEmail": "ada@example.com",
+        "customerPhone": "+2348012345678",
+        "scheduledAt": "2026-10-10T10:00:00.000Z"
+      }'
+    ```
+  * **Example Success (201 Created)**:
+    ```json
+    {
+      "data": {
+        "id": "new-uuid",
+        "propertyId": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+        "customerName": "Ada Okafor",
+        "customerEmail": "ada@example.com",
+        "customerPhone": "+2348012345678",
+        "scheduledAt": "2026-10-10T10:00:00.000Z",
+        "status": "pending",
+        "createdAt": "2026-09-22T10:00:00.000Z",
+        "updatedAt": "2026-09-22T10:00:00.000Z"
+      }
+    }
+    ```
+  * **Example Error (422 Unprocessable Entity)**:
+    ```json
+    {
+      "error": {
+        "code": "VALIDATION_ERROR",
+        "message": "customerEmail Invalid email address"
+      }
+    }
+    ```
+* `PATCH /api/v1/viewings/:id`
+  * **Description**: Partially update an existing viewing request.
+  * **Body**: `application/json`
+  * **Mutable Fields** (all optional, but at least one must be provided. Empty body is rejected):
+    * `propertyId`
+    * `customerName`
+    * `customerEmail`
+    * `customerPhone`
+    * `scheduledAt`
+    * `status`
+  * **Example Request**:
+    ```bash
+    curl -X PATCH http://localhost:3000/api/v1/viewings/existing-uuid \
+      -H "Content-Type: application/json" \
+      -d '{
+        "status": "confirmed"
+      }'
+    ```
+  * **Example Success (200 OK)**: Returns the updated viewing in the `data` envelope.
+* `DELETE /api/v1/viewings/:id`
+  * **Description**: Delete a viewing request.
+  * **Example Success (200 OK)**:
+    ```json
+    {
+      "data": {
+        "id": "deleted-uuid",
+        "deleted": true
+      }
+    }
+    ```
+  * **Example Error (404 Not Found)**: Returns 404 if the viewing does not exist.
+
+### HTTP Status Codes
+* **200 OK**: Successful GET, successful PATCH, or successful DELETE confirmation.
+* **201 Created**: Successful POST.
+* **400 Bad Request**: Malformed route UUID, invalid query parameter, invalid sort field, or malformed JSON in request body.
+* **404 Not Found**: The requested resource does not exist (e.g. valid UUID but no record).
+* **422 Unprocessable Entity**: Body validation errors (missing required field, invalid email format, invalid status, empty PATCH) or valid UUID referencing a nonexistent foreign key.
+* **500 Internal Server Error**: Unexpected server-side failure.
 
 ### Examples
 ```bash
