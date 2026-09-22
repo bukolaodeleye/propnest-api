@@ -176,3 +176,21 @@ npx prisma migrate status
 ```bash
 npm run db:smoke
 ```
+
+## Development Seed Data
+
+Faker is used for generating realistic development records.
+The seed uses a fixed faker seed value for reproducibility and clears existing records in dependency order before inserting new data.
+The seed script is committed at `prisma/seed.ts`.
+
+> **Note**: This creates development/demo data ONLY, not production data!
+
+**Seed Data Volume:**
+* 300 Agents
+* 900 Properties
+* 1,500 Viewings
+
+**Run the Seed Script:**
+```bash
+npm run db:seed
+```

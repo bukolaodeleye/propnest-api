@@ -10,7 +10,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
-    "db:smoke": "tsx src/scripts/db-smoke.ts"
+    "db:smoke": "tsx src/scripts/db-smoke.ts",
+    "db:seed": "prisma db seed"
   },
   "keywords": [],
   "author": "",
@@ -23,6 +24,7 @@
     "pg": "^8.23.0"
   },
   "devDependencies": {
+    "@faker-js/faker": "^10.6.0",
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.2",
     "@types/pg": "^8.23.1",
