@@ -197,20 +197,35 @@ npm run db:seed
 
 ## API Endpoints (Read-Only)
 
-All resource endpoints are versioned under `/api/v1`. Currently, only read operations are implemented (filtering and sorting will be added in later stages).
+All resource endpoints are versioned under `/api/v1`. The collection endpoints support **offset pagination**, **filtering**, and **sorting**.
 
 ### Agents
 * `GET /api/v1/agents`
+  * Filters: `city` (case-insensitive), `agencyName` (partial match)
+  * Sort: `name`, `agencyName`, `city`, `createdAt` (default)
 * `GET /api/v1/agents/:id`
 * `GET /api/v1/agents/:id/properties`
+  * Filters: `city`, `state`, `propertyType`, `listingType`, `status`, `bedrooms`, `minPrice`, `maxPrice`
+  * Sort: `price`, `createdAt` (default), `bedrooms`, `bathrooms`, `city`
 
 ### Properties
 * `GET /api/v1/properties`
+  * Filters: `city` (case-insensitive), `state` (case-insensitive), `propertyType` (enum), `listingType` (enum), `status` (enum), `bedrooms` (integer), `minPrice`, `maxPrice`
+  * Sort: `price`, `createdAt` (default), `bedrooms`, `bathrooms`, `city`
 * `GET /api/v1/properties/:id`
 
 ### Viewings
 * `GET /api/v1/viewings`
+  * Filters: `status` (enum), `propertyId` (UUID), `from` (date/datetime), `to` (date/datetime)
+  * Sort: `scheduledAt` (default), `createdAt`, `status`
 * `GET /api/v1/viewings/:id`
+
+### Examples
+```bash
+curl "http://localhost:3000/api/v1/properties?city=Lagos&listingType=sale"
+curl "http://localhost:3000/api/v1/properties?sort=price&order=desc&limit=10"
+curl "http://localhost:3000/api/v1/viewings?status=pending"
+```
 
 ### Pagination
 Collection endpoints are paginated using `limit` and `offset` query parameters.

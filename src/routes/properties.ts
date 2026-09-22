@@ -1,27 +1,49 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '../lib/prisma.js';
-import { paginationSchema, uuidSchema } from '../utils/validation.js';
+import { propertyFilterSchema, uuidSchema } from '../utils/validation.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 import { calculatePaginationMeta } from '../utils/pagination.js';
+import { Prisma } from '../generated/prisma/index.js';
 
 const router = Router();
 
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const parseResult = paginationSchema.safeParse(req.query);
+    const parseResult = propertyFilterSchema.safeParse(req.query);
     if (!parseResult.success) {
-      res.status(400).json(errorResponse('INVALID_PAGINATION', 'Invalid pagination parameters'));
+      const isSortError = parseResult.error.issues.some(i => i.path.includes('sort') || i.path.includes('order'));
+      const code = isSortError ? 'INVALID_SORT' : 'INVALID_FILTER';
+      res.status(400).json(errorResponse(code, parseResult.error.issues[0].message || 'Invalid parameters'));
       return;
     }
-    const { limit, offset } = parseResult.data;
+    const { limit, offset, city, state, propertyType, listingType, status, bedrooms, minPrice, maxPrice, sort, order } = parseResult.data;
+
+    const where: Prisma.PropertyWhereInput = {};
+    if (city) where.city = { equals: city, mode: 'insensitive' };
+    if (state) where.state = { equals: state, mode: 'insensitive' };
+    if (propertyType) where.propertyType = propertyType;
+    if (listingType) where.listingType = listingType;
+    if (status) where.status = status;
+    if (bedrooms !== undefined) where.bedrooms = bedrooms;
+    
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      where.price = {};
+      if (minPrice !== undefined) where.price.gte = minPrice;
+      if (maxPrice !== undefined) where.price.lte = maxPrice;
+    }
+
+    const orderBy: Prisma.PropertyOrderByWithRelationInput[] = [
+      { [sort]: order },
+      { id: 'asc' }
+    ];
 
     const [total, properties] = await prisma.$transaction([
-      prisma.property.count(),
+      prisma.property.count({ where }),
       prisma.property.findMany({
+        where,
         take: limit,
         skip: offset,
-        orderBy: { createdAt: 'desc' },
-        // Don't include huge nested objects by default in collections, just the basics
+        orderBy,
       }),
     ]);
 
