@@ -124,8 +124,11 @@ Offset pagination is being chosen initially because it is simple for API consume
 
 ## Design Decisions
 
+* **Database & ORM:** PostgreSQL is the intended database, and Prisma ORM is being used to define the schema and interact with the data.
+* **Identifiers:** UUIDs are implemented as the primary identifiers for all resources to prevent easy enumeration of resources and guessing of IDs.
 * **Domain:** PropNest was selected as the domain for a property marketplace.
-* **Identifiers:** UUIDs are being used instead of sequential integer IDs to prevent easy enumeration of resources and guessing of IDs.
+* **Relationships:** The `Agent → Property` and `Property → Viewing` relationships are explicitly represented in the Prisma schema with 1-to-many configurations.
+* **Pricing Design:** Property prices use exact decimal storage (`Decimal`) to strictly avoid floating-point arithmetic precision problems when dealing with monetary values.
 * **Versioning:** The API will use `/api/v1` from the beginning to ensure smooth future versioning without breaking existing clients.
 * **Consistent Envelopes:** Responses use consistent envelopes to provide a predictable structure for data, metadata, and errors across all endpoints.
 * **Pagination:** Offset pagination is the initial strategy because of its simplicity and ease of implementation for the bootcamp dataset.

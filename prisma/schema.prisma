@@ -1,0 +1,89 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+model Agent {
+  id         String     @id @default(uuid()) @db.Uuid
+  name       String
+  email      String     @unique
+  phone      String
+  agencyName String
+  city       String
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  properties Property[]
+}
+
+enum PropertyType {
+  apartment
+  house
+  duplex
+  land
+  commercial
+}
+
+enum ListingType {
+  rent
+  sale
+}
+
+enum PropertyStatus {
+  available
+  unavailable
+}
+
+model Property {
+  id           String         @id @default(uuid()) @db.Uuid
+  title        String
+  description  String
+  price        Decimal        @db.Decimal
+  city         String
+  state        String
+  address      String
+  bedrooms     Int
+  bathrooms    Int
+  propertyType PropertyType
+  listingType  ListingType
+  status       PropertyStatus @default(available)
+  agentId      String         @db.Uuid
+  agent        Agent          @relation(fields: [agentId], references: [id], onDelete: Restrict)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  viewings     Viewing[]
+
+  @@index([agentId])
+  @@index([city])
+  @@index([propertyType])
+  @@index([listingType])
+  @@index([status])
+  @@index([price])
+}
+
+enum ViewingStatus {
+  pending
+  confirmed
+  completed
+  cancelled
+}
+
+model Viewing {
+  id            String        @id @default(uuid()) @db.Uuid
+  propertyId    String        @db.Uuid
+  property      Property      @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  customerName  String
+  customerEmail String
+  customerPhone String
+  scheduledAt   DateTime
+  status        ViewingStatus @default(pending)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([propertyId])
+  @@index([status])
+  @@index([scheduledAt])
+}
