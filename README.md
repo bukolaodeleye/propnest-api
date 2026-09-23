@@ -136,7 +136,7 @@ curl http://localhost:3000/api/v1/health
 {
   "data": {
     "status": "ok",
-    "timestamp": "2026-09-23T10:00:00.000Z"
+    "service": "PropNest API"
   }
 }
 ```
@@ -401,7 +401,7 @@ curl -X POST http://localhost:3000/api/v1/viewings \
 {
   "error": {
     "code": "VALIDATION_ERROR",
-    "message": "customerEmail Invalid email address"
+    "message": "customerEmail Invalid input: expected string, received undefined"
   }
 }
 ```
