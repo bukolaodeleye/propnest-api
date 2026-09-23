@@ -85,7 +85,7 @@ PropNest is a public REST API for browsing property listings, property agents, a
 * **Strategy:** Offset pagination
 * **Default Limit:** 20
 * **Maximum Limit:** 100
-* **Behavior:** Negative offsets will eventually be rejected. Requests above the maximum limit will eventually be clamped to 100.
+* **Behavior:** Negative offsets return HTTP 400. Requests above the maximum limit are clamped to 100.
 
 **Reasoning:**
 Offset pagination is being chosen initially because it is simple for API consumers to use and understand, and appropriate for the expected bootcamp dataset size. Cursor pagination may be preferable for very large or rapidly changing datasets in the future.
@@ -155,10 +155,17 @@ npm install
 npm run dev
 ```
 
-You can verify the server is running by hitting the health check endpoint:
+The server starts on port `3000` by default. Set `PORT=3001` if port 3000 is occupied by another process:
 
-```text
-GET /api/v1/health
+```bash
+# Windows cmd.exe
+set PORT=3001 && npm run dev
+```
+
+Verify the server is running:
+
+```bash
+curl http://localhost:3000/api/v1/health
 ```
 
 ## Local Database Development
@@ -234,13 +241,7 @@ All resource endpoints are versioned under `/api/v1`. The collection endpoints s
     ```bash
     curl -X POST http://localhost:3000/api/v1/viewings \
       -H "Content-Type: application/json" \
-      -d '{
-        "propertyId": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
-        "customerName": "Ada Okafor",
-        "customerEmail": "ada@example.com",
-        "customerPhone": "+2348012345678",
-        "scheduledAt": "2026-10-10T10:00:00.000Z"
-      }'
+      -d '{"propertyId":"a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d","customerName":"Ada Okafor","customerEmail":"ada@example.com","customerPhone":"+2348012345678","scheduledAt":"2026-10-10T10:00:00.000Z"}'
     ```
   * **Example Success (201 Created)**:
     ```json
@@ -281,9 +282,7 @@ All resource endpoints are versioned under `/api/v1`. The collection endpoints s
     ```bash
     curl -X PATCH http://localhost:3000/api/v1/viewings/existing-uuid \
       -H "Content-Type: application/json" \
-      -d '{
-        "status": "confirmed"
-      }'
+      -d '{"status":"confirmed"}'
     ```
   * **Example Success (200 OK)**: Returns the updated viewing in the `data` envelope.
 * `DELETE /api/v1/viewings/:id`
@@ -386,3 +385,41 @@ Examples of API defensive behavior:
 
 *Note: The `price` of a Property is a precise monetary value and is serialized in JSON as a raw `string` (e.g., `"85000000"`) to avoid floating point precision loss. Currency formatting should be handled by the consumer.*
 
+---
+
+## Assessment Progress
+
+This section provides transparent implementation status for the bootcamp assessment.
+
+### Implemented locally
+
+| Requirement | Status |
+|---|---|
+| Three related resources (Agent, Property, Viewing) with schema relationships | ✅ Complete |
+| UUID primary keys on all resources | ✅ Complete |
+| Versioned API (`/api/v1`) | ✅ Complete |
+| Repeatable seed (300 Agents, 900 Properties, 1,500 Viewings) | ✅ Complete |
+| Pagination on every collection endpoint (limit/offset) | ✅ Complete |
+| Filtering on every collection endpoint (2+ fields each) | ✅ Complete |
+| Sorting on every collection endpoint (`sort` + `order`) | ✅ Complete |
+| Consistent success envelopes (`data` + `meta`) | ✅ Complete |
+| Consistent error envelopes (`error.code` + `error.message`) | ✅ Complete |
+| Honest HTTP status codes (200, 201, 400, 404, 422, 429, 500) | ✅ Complete |
+| No expected bad input produces HTTP 500 | ✅ Complete |
+| IP-based rate limiting (100 req / 60 s), config-driven | ✅ Complete |
+| `Retry-After` header on 429 responses | ✅ Complete |
+| Viewing write operations (POST, PATCH, DELETE) | ✅ Complete |
+| README documentation | ✅ Complete |
+
+### Still pending (external deliverables)
+
+| Requirement | Status |
+|---|---|
+| Public deployment (live URL) | ⏳ Pending |
+| Production database seed verification at deployed URL | ⏳ Pending |
+| External `curl` verification screenshots | ⏳ Pending |
+| 429 screenshot (live server) | ⏳ Pending |
+| Consumer application | ⏳ Pending |
+| Consumer screenshot | ⏳ Pending |
+| GitHub remote / public repository | ⏳ Pending |
+| Public post (blog / social media) | ⏳ Pending |

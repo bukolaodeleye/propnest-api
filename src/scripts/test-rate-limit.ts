@@ -12,8 +12,11 @@ async function main() {
   console.log(`--- Part H: Rate Limit Verification ---`);
   console.log(`Sending up to ${attempts} requests to /api/v1/health...`);
 
+  let finalI = 0;
+  let res: any;
   for (let i = 1; i <= attempts; i++) {
-    const res = await fetch('http://localhost:3001/api/v1/health');
+    finalI = i;
+    res = await fetch('http://localhost:3001/api/v1/health');
     if (res.status === 429) {
       blocked = true;
       blockedStatus = res.status;
@@ -39,10 +42,14 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`\nAccepted requests before blocking: ${acceptedRequests}`);
+  console.log(`\n--- RATE LIMIT RESULT ---`);
+  console.log(`Total attempts made: ${finalI}`);
+  console.log(`Successful requests observed (HTTP 200): ${acceptedRequests}`);
+  console.log(`First blocked request number: ${finalI}`);
   console.log(`Blocked Status: ${blockedStatus}`);
   console.log(`Retry-After Header: ${retryAfter}`);
-  console.log(`Blocked Body: ${JSON.stringify(blockedBody)}`);
+  console.log(`Standard RateLimit Headers: Limit=${res.headers.get('ratelimit-limit')}, Remaining=${res.headers.get('ratelimit-remaining')}, Reset=${res.headers.get('ratelimit-reset')}`);
+  console.log(`Blocked Body JSON: ${JSON.stringify(blockedBody)}`);
 
   if (!retryAfter) {
     console.error(`\nFAILURE: Retry-After header is missing!`);
