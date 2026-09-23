@@ -25,7 +25,7 @@ Current API base URL conceptually:
 ## Quick Start
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/bukolaodeleye/propnest-api.git
    cd propnest-api
    ```
 2. Install dependencies:
@@ -526,7 +526,7 @@ A clean fresh-server limiter test confirmed:
 ### Live API
 `Pending deployment`
 ### GitHub repository
-`Pending`
+https://github.com/bukolaodeleye/propnest-api
 ### Live curl screenshot
 `Pending deployment`
 ### 429 screenshot
