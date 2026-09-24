@@ -1,5 +1,7 @@
 import 'dotenv/config';
 
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3001/api/v1';
+
 async function main() {
   const maxRequests = 100;
   const attempts = 110;
@@ -10,13 +12,13 @@ async function main() {
   let acceptedRequests = 0;
 
   console.log(`--- Part H: Rate Limit Verification ---`);
-  console.log(`Sending up to ${attempts} requests to /api/v1/health...`);
+  console.log(`Sending up to ${attempts} requests to ${API_BASE_URL}/health...`);
 
   let finalI = 0;
   let res: any;
   for (let i = 1; i <= attempts; i++) {
     finalI = i;
-    res = await fetch('http://localhost:3001/api/v1/health');
+    res = await fetch(`${API_BASE_URL}/health`);
     if (res.status === 429) {
       blocked = true;
       blockedStatus = res.status;

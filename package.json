@@ -7,11 +7,12 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc",
+    "build": "prisma generate && tsc",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
     "db:smoke": "tsx src/scripts/db-smoke.ts",
     "db:seed": "prisma db seed",
+    "db:migrate:deploy": "prisma migrate deploy",
     "test:api": "tsx src/scripts/test-api.ts",
     "test:rate-limit": "tsx src/scripts/test-rate-limit.ts"
   },

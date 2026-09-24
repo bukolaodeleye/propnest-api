@@ -3,7 +3,7 @@ import { prisma } from '../lib/prisma.js';
 import { agentFilterSchema, propertyFilterSchema, uuidSchema } from '../utils/validation.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 import { calculatePaginationMeta } from '../utils/pagination.js';
-import { Prisma } from '../generated/prisma/index.js';
+import { Prisma } from '@prisma/client';
 
 const router = Router();
 

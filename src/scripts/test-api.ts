@@ -1,8 +1,11 @@
 import 'dotenv/config';
 import { prisma } from '../lib/prisma.js';
 
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3001/api/v1';
+
 async function fetchJson(path: string, options: RequestInit = {}) {
-  const res = await fetch(`http://localhost:3001${path}`, options);
+  const url = path.startsWith('http') ? path : `${API_BASE_URL}${path.replace(/^\/api\/v1/, '')}`;
+  const res = await fetch(url, options);
   let json;
   try {
     json = await res.json();
