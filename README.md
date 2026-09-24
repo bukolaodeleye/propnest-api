@@ -20,7 +20,7 @@ Current API base URL conceptually:
 `http://localhost:3000/api/v1`
 
 ### Production
-`Production URL: Pending deployment`
+`Production URL: Pending deployment (Deployment in progress...)`
 
 ## Quick Start
 1. Clone the repository:
