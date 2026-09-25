@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { faker } from '@faker-js/faker';
 import { prisma } from '../src/lib/prisma.js';
-import { PropertyType, ListingType, PropertyStatus, ViewingStatus } from '../src/generated/prisma/index.js';
+import { PropertyType, ListingType, PropertyStatus, ViewingStatus } from '@prisma/client';
 
 // Part E - Exact data volumes
 const AGENT_COUNT = 300;
